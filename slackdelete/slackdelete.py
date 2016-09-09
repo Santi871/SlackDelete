@@ -62,14 +62,14 @@ class SlackDelete:
         return retval
 
     def show_whitelist(self, team):
-        if self.whitelists[team] == ["None"]:
-            return "Whitelist is empty."
-
         retval = "Showing whitelist:\n"
 
         for user in self.whitelists[team]:
             if user != "None":
                 retval += "-" + user
+
+        if retval == "Showing whitelist:\n":
+            return "Whitelist is empty."
 
         return retval
 
