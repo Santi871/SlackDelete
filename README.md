@@ -13,6 +13,8 @@ Useful for announcements-only channels and the like.
 3. Optionally, use `/sdwhitelist [user]` and `/sdunwhitelist [user]` to manage whitelisted users. Use `/sdwhitelisted` to
 view whitelisted users.
 
-Note: Whitelisted users are per team, affecting all channels in which SlackDelete is active.
+Note: Only team admins may add or remove whitelisted users.
+
+Note2: Whitelisted users are per team, affecting all channels in which SlackDelete is active.
 
 To remove SlackDelete from a channel, use `/remove @slackdelete` while on the channel you want to kick it from.
