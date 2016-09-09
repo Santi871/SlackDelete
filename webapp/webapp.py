@@ -29,6 +29,8 @@ def command():
         elif slack_request.command == '/sdunwhitelist':
             response = sd.unwhitelist_user(slack_request.team_domain, slack_request.text.split()[0],
                                            slack_request.user_id)
+        elif slack_request.command == 'sdwhitelisted':
+            response = sd.show_whitelist(slack_request.team_domain)
 
     return response
 

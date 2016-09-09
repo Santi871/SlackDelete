@@ -61,6 +61,17 @@ class SlackDelete:
 
         return retval
 
+    def show_whitelist(self, team):
+        if not len(self.whitelists[team]):
+            return "Whitelist is empty."
+
+        retval = "Showing whitelist:\n"
+
+        for user in self.whitelists[team]:
+            retval += "-" + user
+
+        return retval
+
     def monitor_slack_events(self, s, access_token, team_name):
         for event in s.events():
             event_dict = json.loads(event.json)
