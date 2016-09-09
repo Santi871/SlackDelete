@@ -6,4 +6,4 @@ if __name__ == "__main__":
     sd.monitor_all_slacks()
     app = create_app(sd)
     context = ('santihub.crt', 'santihub.key')
-    app.run(host='0.0.0.0', ssl_context=context, port=5011)
+    app.run(host='0.0.0.0', ssl_context=context, port=5011, threaded=True)
