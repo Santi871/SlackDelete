@@ -2,7 +2,7 @@ from flask import Flask, request, current_app, Blueprint
 import requests
 from slackdelete.slackdelete import SlackRequest
 
-admin = Blueprint('admin', __name__, url_prefix='/admin')
+admin = Blueprint('admin', __name__)
 
 
 def create_app(sd_instance):
