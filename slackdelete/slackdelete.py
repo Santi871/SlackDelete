@@ -38,7 +38,7 @@ class SlackDelete:
         return retval
 
     def unwhitelist_user(self, team, user):
-        retval = "Unwhitelisted user"
+        retval = "Unwhitelisted user."
         if user in self.whitelists[team]:
             self.whitelists[team].remove(user)
             self.config.unwhitelist_user(team, user)
@@ -59,6 +59,7 @@ class SlackDelete:
             channel = event_dict['channel']
             params = {'token': access_token, 'user': user}
             response = requests.get("https://slack.com/api/users.info", params=params).json()
+            print(str(response))
             is_admin = response['user']['is_admin']
             user = response['user']['name']
 
