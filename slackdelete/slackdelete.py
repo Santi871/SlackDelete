@@ -111,6 +111,7 @@ class SlackRequest:
             self.original_message = self.form['original_message']
         else:
             self.user = self.form['user_name']
+            self.user_id = self.form['user_id']
             self.team_domain = self.form['team_domain']
             self.team_id = self.form['team_id']
             self.command = self.form['command']
