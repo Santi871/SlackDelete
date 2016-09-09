@@ -68,7 +68,8 @@ class SlackDelete:
         retval = "Showing whitelist:\n"
 
         for user in self.whitelists[team]:
-            retval += "-" + user
+            if user != "None":
+                retval += "-" + user
 
         return retval
 
