@@ -33,6 +33,7 @@ class SDConfig:
 
     def whitelist_user(self, team, user):
         whitelist = self.config[team]['whitelist'].split(',')
+        whitelist.remove("None")
 
         if user not in whitelist:
             whitelist.append(user)
@@ -44,7 +45,13 @@ class SDConfig:
         whitelist = self.config[team]['whitelist'].split(',')
         if user in whitelist:
             whitelist.remove(user)
-            self.config[team]['whitelist'] = ','.join(whitelist)
+            whitelist = ','.join(whitelist)
+
+            if whitelist != "":
+                self.config[team]['whitelist'] = whitelist
+            else:
+                self.config[team]['whitelist'] = "None"
+
             with open(self.config_name, 'w') as configfile:
                 self.config.write(configfile)
 
