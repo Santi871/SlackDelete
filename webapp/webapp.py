@@ -31,6 +31,8 @@ def command():
                                            slack_request.user_id)
         elif slack_request.command == 'sdwhitelisted':
             response = sd.show_whitelist(slack_request.team_domain)
+    else:
+        return 'Invalid request token'
 
     return response
 
