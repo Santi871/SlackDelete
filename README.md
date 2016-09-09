@@ -1,5 +1,5 @@
 # SlackDelete
-Delete messages from channels if they weren't posted by a list of whitelisted users or team admins.
+SlackDelete deletes messages from channels if they weren't posted by a list of whitelisted users or team admins.
 
 
 Useful for announcements-only channels and the like.
@@ -9,5 +9,10 @@ Useful for announcements-only channels and the like.
 ## Usage
 
 1. Add to Slack with the button above.
-2. On the channels you want SlackDelete to be active, type /invite @slackdelete.
-3. Optionally, use /sdwhitelist [user] and /sdunwhitelist [user] to manage whitelisted users.
+2. On the channels you want SlackDelete to be active, type `/invite @slackdelete`.
+3. Optionally, use `/sdwhitelist [user]` and `/sdunwhitelist [user]` to manage whitelisted users. Use `/sdwhitelisted` to
+view whitelisted users.
+
+Note: Whitelisted users are per team, affecting all channels in which SlackDelete is active.
+
+To remove SlackDelete from a channel, use `/remove @slackdelete` while on the channel you want to kick it from.
