@@ -33,6 +33,7 @@ class SlackDelete:
         retval = "Whitelisted user."
         params = {'token': self.access_tokens[team], 'user': author}
         response = requests.get("https://slack.com/api/users.info", params=params).json()
+        print(str(response))
         is_admin = response['user']['is_admin']
 
         if user not in self.whitelists[team] and is_admin:
