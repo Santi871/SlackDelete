@@ -23,7 +23,7 @@ def oauth_callback():
     return "Authorization granted!"
 
 
-@app.route('/slack/commands', methods=['POST'])
+@admin.route('/slack/commands', methods=['POST'])
 def command():
     sd = current_app.config['sd']
     slack_request = SlackRequest(request, sd.config.slackapp_cmds_secret)
