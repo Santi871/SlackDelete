@@ -10,9 +10,11 @@ class SlackDelete:
     def __init__(self, config_name):
         self.config = SDConfig(config_name)
         self.whitelists = dict()
+        self.access_tokens = dict()
 
         for team in self.config.teams:
             self.whitelists[team.team_name] = team.whitelist
+            self.access_tokens[team.team_name] = team.access_token
 
     def monitor_all_slacks(self):
         for team in self.config.teams:
@@ -27,23 +29,35 @@ class SlackDelete:
                    target=self.monitor_slack_events, args=[s, team.access_token, team.team_name])
         t.start()
 
-    def whitelist_user(self, team, user):
+    def whitelist_user(self, team, user, author):
         retval = "Whitelisted user."
-        if user not in self.whitelists[team]:
+        params = {'token': self.access_tokens[team], 'user': author}
+        response = requests.get("https://slack.com/api/users.info", params=params).json()
+        is_admin = response['user']['is_admin']
+
+        if user not in self.whitelists[team] and is_admin:
             self.whitelists[team].append(user)
             self.config.whitelist_user(team, user)
-        else:
+        elif user in self.whitelists[team]:
             retval = "Failed to whitelist user: user already whitelisted."
+        elif not is_admin:
+            retval = "Failed to whitelist user: you must be an admin to run this command."
 
         return retval
 
-    def unwhitelist_user(self, team, user):
-        retval = "Unwhitelisted user."
+    def unwhitelist_user(self, team, user, author):
+        retval = "Whitelisted user."
+        params = {'token': self.access_tokens[team], 'user': author}
+        response = requests.get("https://slack.com/api/users.info", params=params).json()
+        is_admin = response['user']['is_admin']
+
         if user in self.whitelists[team]:
             self.whitelists[team].remove(user)
             self.config.unwhitelist_user(team, user)
-        else:
+        elif user not in self.whitelists[team]:
             retval = "Failed to unwhitelist user: user not in whitelist."
+        elif not is_admin:
+            retval = "Failed to unwhitelist user: you must be an admin to run this command."
 
         return retval
 
@@ -59,11 +73,10 @@ class SlackDelete:
             channel = event_dict['channel']
             params = {'token': access_token, 'user': user}
             response = requests.get("https://slack.com/api/users.info", params=params).json()
-            print(str(response))
             is_admin = response['user']['is_admin']
             user = response['user']['name']
 
-            if is_admin and user not in self.whitelists[team_name]:
+            if not is_admin and user not in self.whitelists[team_name]:
                 params = {'token': access_token, 'channel': channel, 'ts': message_ts}
                 response = requests.get("https://slack.com/api/chat.delete", params=params)
                 if not response.json()['ok']:
