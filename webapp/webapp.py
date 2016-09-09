@@ -24,9 +24,11 @@ def command():
     response = 'Invalid request token'
     if slack_request.is_valid:
         if slack_request.command == '/sdwhitelist':
-            response = sd.whitelist_user(slack_request.team_domain, slack_request.text.split()[0], slack_request.user)
+            response = sd.whitelist_user(slack_request.team_domain, slack_request.text.split()[0],
+                                         slack_request.user_id)
         elif slack_request.command == '/sdunwhitelist':
-            response = sd.unwhitelist_user(slack_request.team_domain, slack_request.text.split()[0], slack_request.user)
+            response = sd.unwhitelist_user(slack_request.team_domain, slack_request.text.split()[0],
+                                           slack_request.user_id)
 
     return response
 
