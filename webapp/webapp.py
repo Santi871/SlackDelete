@@ -1,19 +1,14 @@
-from flask import Flask, request, current_app, Blueprint
+from flask import Flask, request
 import requests
-from slackdelete.slackdelete import SlackRequest
+from slackdelete.slackdelete import SlackRequest, SlackDelete
 
-admin = Blueprint('admin', __name__, url_prefix='/admin')
-
-
-def create_app(sd_instance):
-    app = Flask(__name__)
-    app.config['sd'] = sd_instance
-    return app
+app = Flask(__name__)
+sd = SlackDelete('config.ini')
+sd.monitor_all_slacks()
 
 
-@admin.route("/oauthcallback")
+@app.route("/oauthcallback")
 def oauth_callback():
-    sd = current_app.config['sd']
     data = {'client_id': sd.config.slackapp_id,
             'client_secret': sd.config.slackapp_secret, 'code': request.args.get('code')}
     response = requests.post('https://slack.com/api/oauth.access', params=data)
@@ -23,9 +18,8 @@ def oauth_callback():
     return "Authorization granted!"
 
 
-@admin.route('/slack/commands', methods=['POST'])
+@app.route('/slack/commands', methods=['POST'])
 def command():
-    sd = current_app.config['sd']
     slack_request = SlackRequest(request, sd.config.slackapp_cmds_secret)
     response = 'Invalid request token'
     if slack_request.is_valid:
