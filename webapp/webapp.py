@@ -1,5 +1,6 @@
 from flask import Flask, request, current_app, Blueprint
 import requests
+from slackdelete.slackdelete import SlackRequest
 
 admin = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -20,4 +21,18 @@ def oauth_callback():
     sd.monitor_new_slack(team)
 
     return "Authorization granted!"
+
+
+@app.route('/slack/commands', methods=['POST'])
+def command():
+    sd = current_app.config['sd']
+    slack_request = SlackRequest(request, sd.config.slackapp_cmds_secret)
+    response = 'Invalid request token'
+    if slack_request.is_valid:
+        if slack_request.command == '/sdwhitelist':
+            response = sd.whitelist_user(slack_request.team_domain, slack_request.text.split()[0])
+        elif slack_request.command == '/sdunwhitelist':
+            response = sd.unwhitelist_user(slack_request.team_domain, slack_request.text.split()[0])
+
+    return response
 

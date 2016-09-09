@@ -9,6 +9,7 @@ class SDConfig:
         self.config_name = config_name
         self.slackapp_id = None
         self.slackapp_secret = None
+        self.slackapp_cmds_secret = None
         self.whitelist = None
         self._update()
         self.teams = self._get_slack_teams()
@@ -17,6 +18,7 @@ class SDConfig:
         self.config.read(self.config_name)
         self.slackapp_id = self.config['credentials']['slackapp_id']
         self.slackapp_secret = self.config['credentials']['slackapp_secret']
+        self.slackapp_cmds_secret = self.config['credentials']['slackapp_cmds_secret']
 
     def _get_slack_teams(self):
         teams = list()
@@ -28,6 +30,23 @@ class SDConfig:
                                  whitelist=self.config[section]['whitelist'].split(','))
                 teams.append(team)
         return teams
+
+    def whitelist_user(self, team, user):
+        whitelist = self.config[team]['whitelist'].split(',')
+
+        if user not in whitelist:
+            whitelist.append(user)
+            self.config[team]['whitelist'] = ','.join(whitelist)
+            with open(self.config_name, 'w') as configfile:
+                self.config.write(configfile)
+
+    def unwhitelist_user(self, team, user):
+        whitelist = self.config[team]['whitelist'].split(',')
+        if user in whitelist:
+            whitelist.remove(user)
+            self.config[team]['whitelist'] = ','.join(whitelist)
+            with open(self.config_name, 'w') as configfile:
+                self.config.write(configfile)
 
     def add_team(self, response_dict):
 

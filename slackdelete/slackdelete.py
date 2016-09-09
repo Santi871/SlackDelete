@@ -1,9 +1,7 @@
 import json
 from threading import Thread
-
 import requests
 from slacksocket import SlackSocket
-
 from slackdelete.config import SDConfig
 
 
@@ -11,39 +9,109 @@ class SlackDelete:
 
     def __init__(self, config_name):
         self.config = SDConfig(config_name)
+        self.whitelists = dict()
+
+        for team in self.config.teams:
+            self.whitelists[team.team_name] = team.whitelist
 
     def monitor_all_slacks(self):
         for team in self.config.teams:
             s = SlackSocket(team.bot_access_token, translate=False, event_filters=['message'])
-            t = Thread(name="Slackmonitor, team: " + team.team_name, target=monitor_slack_events,
-                       args=[s, team.access_token, team.whitelist])
+            t = Thread(name="Slackmonitor, team: " + team.team_name, target=self.monitor_slack_events,
+                       args=[s, team.access_token, team.team_name])
             t.start()
 
-    @staticmethod
-    def monitor_new_slack(team):
+    def monitor_new_slack(self, team):
         s = SlackSocket(team.bot_access_token, translate=False, event_filters=['message'])
         t = Thread(name="Slackmonitor, team: " + team.team_name,
-                   target=monitor_slack_events, args=[s, team.access_token, team.whitelist])
+                   target=self.monitor_slack_events, args=[s, team.access_token, team.team_name])
         t.start()
 
+    def whitelist_user(self, team, user):
+        retval = "Whitelisted user."
+        if user not in self.whitelists[team]:
+            self.whitelists[team].append(user)
+            self.config.whitelist_user(team, user)
+        else:
+            retval = "Failed to whitelist user: user already whitelisted."
 
-def monitor_slack_events(s, access_token, whitelist):
-    for event in s.events():
-        event_dict = json.loads(event.json)
-        event_subtype = event_dict.get('subtype', None)
-        if event_subtype is not None:
-            continue
+        return retval
 
-        user = event_dict['user']
-        message_ts = event_dict['ts']
-        channel = event_dict['channel']
-        params = {'token': access_token, 'user': user}
-        response = requests.get("https://slack.com/api/users.info", params=params).json()
-        is_admin = response['user']['is_admin']
-        user = response['user']['name']
+    def unwhitelist_user(self, team, user):
+        retval = "Unwhitelisted user"
+        if user in self.whitelists[team]:
+            self.whitelists[team].remove(user)
+            self.config.unwhitelist_user(team, user)
+        else:
+            retval = "Failed to unwhitelist user: user not in whitelist."
 
-        if is_admin and user not in whitelist:
-            params = {'token': access_token, 'channel': channel, 'ts': message_ts}
-            response = requests.get("https://slack.com/api/chat.delete", params=params)
-            if not response.json()['ok']:
-                break
+        return retval
+
+    def monitor_slack_events(self, s, access_token, team_name):
+        for event in s.events():
+            event_dict = json.loads(event.json)
+            event_subtype = event_dict.get('subtype', None)
+            if event_subtype is not None:
+                continue
+
+            user = event_dict['user']
+            message_ts = event_dict['ts']
+            channel = event_dict['channel']
+            params = {'token': access_token, 'user': user}
+            response = requests.get("https://slack.com/api/users.info", params=params).json()
+            is_admin = response['user']['is_admin']
+            user = response['user']['name']
+
+            if is_admin and user not in self.whitelists[team_name]:
+                params = {'token': access_token, 'channel': channel, 'ts': message_ts}
+                response = requests.get("https://slack.com/api/chat.delete", params=params)
+                if not response.json()['ok']:
+                    break
+
+
+class SlackRequest:
+
+    """Parses HTTP request from Slack"""
+
+    def __init__(self, request, secret):
+
+        self.form = request.form
+        self.request_type = "command"
+        self.response = None
+        self.command = None
+        self.actions = None
+        self.callback_id = None
+        self.is_valid = False
+
+        if 'payload' in self.form:
+            self.request_type = "button"
+            self.form = json.loads(dict(self.form)['payload'][0])
+            self.user = self.form['user']['name']
+            self.user_id = self.form['user']['id']
+            self.team_domain = self.form['team']['domain']
+            self.team_id = self.form['team']['id']
+            self.callback_id = self.form['callback_id']
+            self.actions = self.form['actions']
+            self.message_ts = self.form['message_ts']
+            self.original_message = self.form['original_message']
+        else:
+            self.user = self.form['user_name']
+            self.team_domain = self.form['team_domain']
+            self.team_id = self.form['team_id']
+            self.command = self.form['command']
+            self.text = self.form['text']
+            self.channel_name = self.form['channel_name']
+
+        self.response_url = self.form['response_url']
+        self.token = self.form['token']
+
+        if self.token == secret:
+            self.is_valid = True
+
+    def delayed_response(self, response):
+
+        headers = {"content-type": "plain/text"}
+
+        slack_response = requests.post(self.response_url, data=response, headers=headers)
+
+        return slack_response
